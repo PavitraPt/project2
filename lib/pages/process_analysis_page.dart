@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../pages/business_case_output_page.dart';
 
 class ProcessAnalysisPage extends StatefulWidget {
@@ -35,13 +34,6 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
   bool _updatePiecePerCycle = false;
   bool _updateMachineRate = false;
 
-  // เพิ่มตัวแปรสำหรับเก็บผลลัพธ์การคำนวณ
-  final double _previousVCM = 0.0;
-  final double _newVCM = 0.0;
-  final double _vcmImpact = 0.0;
-  final double _marginDifference = 0.0;
-  final double _upfrontCost = 0.0;
-  final double _breakeven = 0.0;
   String _selectedCurrency = 'THB'; // เพิ่มตัวแปรสำหรับสกุลเงิน
 
   // เพิ่มตัวแปรสำหรับ Upfront Cost และ Working Days
@@ -190,94 +182,67 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
         _volumePerYearController.text.isNotEmpty;
   }
 
-  void _resetForm() {
-    setState(() {
-      _cycleTimeController.clear();
-      _efficiencyController.clear();
-      _piecePerCycleController.clear();
-      _machineRateController.clear();
-      _processCurrentCostController.clear();
-      _newCycleTimeController.clear();
-      _newEfficiencyController.clear();
-      _newPiecePerCycleController.clear();
-      _newMachineRateController.clear();
-      _processNewCostController.clear();
-      _improvementController.clear();
-      _volumePerYearController.clear();
-      _savingController.clear();
-
-      _updateCycleTime = false;
-      _updateEfficiency = false;
-      _updatePiecePerCycle = false;
-      _updateMachineRate = false;
-    });
-  }
-
   Widget _buildCurrentSection() {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1B365C),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Current',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B365C),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Current',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
             ),
-            const SizedBox(height: 16),
-            _buildProcessField('Cycle time', _cycleTimeController, 'Second'),
-            _buildProcessField('Efficiency', _efficiencyController, '%'),
-            _buildProcessField(
-                'Piece per cycle', _piecePerCycleController, 'Piece'),
-            _buildProcessField(
-                'Machine rate per\nminute (Cost)', _machineRateController, ''),
-            _buildDisabledField(
-                'Process cost per piece', _processCurrentCostController),
-          ],
-        ),
+          ),
+          const SizedBox(height: 16),
+          _buildProcessField('Cycle time', _cycleTimeController, 'Second'),
+          _buildProcessField('Efficiency', _efficiencyController, '%'),
+          _buildProcessField(
+              'Piece per cycle', _piecePerCycleController, 'Piece'),
+          _buildProcessField(
+              'Machine rate per\nminute (Cost)', _machineRateController, ''),
+          _buildDisabledField(
+              'Process cost per piece', _processCurrentCostController),
+        ],
       ),
     );
   }
 
   Widget _buildNewSection() {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1B365C),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'New',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B365C),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'New',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
             ),
-            const SizedBox(height: 16),
-            _buildProcessField(
-                'New Cycle time', _newCycleTimeController, 'Second'),
-            _buildProcessField('Efficiency', _newEfficiencyController, '%'),
-            _buildProcessField(
-                'Piece per cycle', _newPiecePerCycleController, 'Piece'),
-            _buildProcessField('Machine rate per\nminute (Cost)',
-                _newMachineRateController, ''),
-            _buildDisabledField(
-                'Process cost per piece', _processNewCostController),
-          ],
-        ),
+          ),
+          const SizedBox(height: 16),
+          _buildProcessField(
+              'New Cycle time', _newCycleTimeController, 'Second'),
+          _buildProcessField('Efficiency', _newEfficiencyController, '%'),
+          _buildProcessField(
+              'Piece per cycle', _newPiecePerCycleController, 'Piece'),
+          _buildProcessField('Machine rate per\nminute (Cost)',
+              _newMachineRateController, ''),
+          _buildDisabledField(
+              'Process cost per piece', _processNewCostController),
+        ],
       ),
     );
   }
@@ -340,155 +305,163 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
     return Dialog(
       child: Container(
         width: 1100,
-        height: 900,
         padding: const EdgeInsets.all(32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Process Analysis',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1B365C),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Process Analysis',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1B365C),
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: _buildCurrentSection()),
-                Container(
-                  width: 100,
-                  padding: const EdgeInsets.symmetric(vertical: 0),
-                  child: _buildCheckboxSection(),
-                ),
-                Expanded(child: _buildNewSection()),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Currency Dropdown
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Currency',
-                  style: TextStyle(color: Color(0xFF1B365C)),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  width: 100,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedCurrency,
-                      items: ['THB', 'USD', 'EUR'].map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedCurrency = newValue!;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Process Cost Section
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1B365C),
-                borderRadius: BorderRadius.circular(8),
+              const SizedBox(height: 32),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth > 800) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: _buildCurrentSection()),
+                        Container(
+                          width: 100,
+                          padding: const EdgeInsets.symmetric(vertical: 0),
+                          child: _buildCheckboxSection(),
+                        ),
+                        Expanded(child: _buildNewSection()),
+                      ],
+                    );
+                  } else {
+                    return Column(
+                      children: [
+                        _buildCurrentSection(),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [_buildCheckboxSection()],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildNewSection(),
+                      ],
+                    );
+                  }
+                },
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 16),
+              // Currency Dropdown
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    'Process cost',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                    'Currency',
+                    style: TextStyle(color: Color(0xFF1B365C)),
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          children: [
-                            _buildProcessField(
-                                'Improvement', _improvementController, ''),
-                            _buildProcessField(
-                                'Volume/Year', _volumePerYearController, ''),
-                            _buildDisabledField('Saving', _savingController),
-                          ],
-                        ),
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 100,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _selectedCurrency,
+                        items: ['THB', 'USD', 'EUR'].map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedCurrency = newValue!;
+                          });
+                        },
                       ),
-                      const Expanded(child: SizedBox()),
-                    ],
+                    ),
                   ),
                 ],
               ),
-            ),
-            const Spacer(),
-            // Buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    if (_validateInputs()) {
-                      // ตรวจสอบ validation ก่อน
-                      _calculateBusinessCase(); // คำนวณค่าต่างๆ
-                    } else {
-                      // แสดง error message
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content:
-                              Text('Please fill all required fields correctly'),
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1B365C),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
-                  ),
-                  child: const Text(
-                    'Generate Business Case',
-                    style: TextStyle(color: Colors.white),
-                  ),
+              const SizedBox(height: 16),
+              // Process Cost Section
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1B365C),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(width: 16),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
-                  ),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(color: Color(0xFF1B365C)),
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Process cost',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildProcessField('Improvement', _improvementController, ''),
+                        _buildProcessField('Volume/Year', _volumePerYearController, ''),
+                        _buildDisabledField('Saving', _savingController),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 24),
+              // Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_validateInputs()) {
+                        _calculateBusinessCase();
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please fill all required fields correctly'),
+                          ),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1B365C),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    child: const Text(
+                      'Generate Business Case',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: Color(0xFF1B365C)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -576,9 +549,9 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
     return Checkbox(
       value: value,
       onChanged: onChanged,
-      fillColor: MaterialStateProperty.resolveWith<Color>(
-        (Set<MaterialState> states) {
-          if (states.contains(MaterialState.selected)) {
+      fillColor: WidgetStateProperty.resolveWith<Color>(
+        (Set<WidgetState> states) {
+          if (states.contains(WidgetState.selected)) {
             return const Color(0xFF1B365C);
           }
           return Colors.white;
@@ -608,15 +581,5 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
 
   double _calculateVCMImpact() {
     return _calculateNewVCM() - _calculatePreviousVCM();
-  }
-
-  // เพิ่ม validation สำหรับ input
-  String? _validateEfficiency(String? value) {
-    if (value == null || value.isEmpty) return 'Required';
-    double? efficiency = double.tryParse(value);
-    if (efficiency == null || efficiency <= 0 || efficiency > 100) {
-      return 'Enter value between 1-100';
-    }
-    return null;
   }
 }
