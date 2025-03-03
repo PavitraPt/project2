@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'create_account_page.dart';
 import 'forgot_password_page.dart';
 import 'home_page.dart';
@@ -14,6 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -22,24 +24,60 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      // ตัวอย่างการตรวจสอบ login อย่างง่าย
-      if (_usernameController.text == 'admin' &&
-          _passwordController.text == 'password') {
+      setState(() {
+        _isLoading = true;
+      });
+      
+      try {
+        // Firebase authentication
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _usernameController.text.trim(),
+          password: _passwordController.text,
+        );
+        
+        // Navigate to home page on successful login
+        if (!mounted) return;
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const HomePage()),
           (route) => false,
         );
-      } else {
-        // แสดง error message
+      } on FirebaseAuthException catch (e) {
+        // Handle specific Firebase Auth errors
+        String errorMessage = 'An error occurred during sign in';
+        
+        if (e.code == 'user-not-found') {
+          errorMessage = 'No user found with this email';
+        } else if (e.code == 'wrong-password') {
+          errorMessage = 'Wrong password provided';
+        } else if (e.code == 'invalid-email') {
+          errorMessage = 'The email address is not valid';
+        } else if (e.code == 'user-disabled') {
+          errorMessage = 'This user account has been disabled';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid username or password'),
+          SnackBar(
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
           ),
         );
+      } catch (e) {
+        // Handle other errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }
@@ -202,21 +240,23 @@ class _LoginPageState extends State<LoginPage> {
                       width: double.infinity,
                       height: 48,
                       child: ElevatedButton(
-                        onPressed: _handleLogin,
+                        onPressed: _isLoading ? null : _handleLogin,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF8655FF),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text(
-                          'Sign In',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text(
+                                'Sign In',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 16),
