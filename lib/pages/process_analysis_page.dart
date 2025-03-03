@@ -45,9 +45,9 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
   String _selectedCurrency = 'THB'; // เพิ่มตัวแปรสำหรับสกุลเงิน
 
   // เพิ่มตัวแปรสำหรับ Upfront Cost และ Working Days
-//  final _upfrontCostController = TextEditingController(text: '300');
-  //final _workingDaysController = TextEditingController(text: '240');
-  //final _sellingPriceController = TextEditingController(text: '100');
+  final _upfrontCostController = TextEditingController(text: '300');
+  final _workingDaysController = TextEditingController(text: '240');
+  final _sellingPriceController = TextEditingController(text: '100');
 
   @override
   void dispose() {
@@ -64,7 +64,9 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
     _improvementController.dispose();
     _volumePerYearController.dispose();
     _savingController.dispose();
-   
+    _upfrontCostController.dispose();
+    _workingDaysController.dispose();
+    _sellingPriceController.dispose();
     super.dispose();
   }
 
