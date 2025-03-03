@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'pages/login_page.dart';
 
-void main() {
+void main() async {
+  // ต้องเรียกใช้ ensureInitialized ก่อนเริ่มต้น Firebase
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // เริ่มต้น Firebase ด้วย options ที่เหมาะสมกับแต่ละแพลตฟอร์ม
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  
+  // เริ่มต้นแอปพลิเคชัน
   runApp(const MyApp());
 }
 
