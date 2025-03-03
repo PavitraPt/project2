@@ -38,7 +38,7 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
   String _selectedCurrency = 'THB'; // เพิ่มตัวแปรสำหรับสกุลเงิน
 
   // เพิ่มตัวแปรสำหรับ Upfront Cost และ Working Days
-  final _upfrontCostController = TextEditingController(text: '300');
+  final _upfrontCostController = TextEditingController();
   final _workingDaysController = TextEditingController(text: '240');
   final _sellingPriceController = TextEditingController(text: '100');
 
@@ -128,21 +128,14 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
     // คำนวณ Margin Difference (Old Cost - New Cost)
     double marginDifference = currentProcessCost - newProcessCost;
 
-    // คำนวณ Net Saving per Year
-    double volumePerYear = double.tryParse(_volumePerYearController.text) ?? 0;
+    // คำนวณ Saving per year
+    double volumePerYear = double.parse(_volumePerYearController.text);
     double saving = marginDifference * volumePerYear;
 
-    // คำนวณ Breakeven (days) - สมมติว่า 1 ปีมี 365 วัน
-    double breakeven = 0;
-    double upfrontCost = double.tryParse(_upfrontCostController.text) ?? 300;
-    double workingDays = double.tryParse(_workingDaysController.text) ?? 240;
-
-    if (marginDifference > 0 && volumePerYear > 0) {
-      double savingPerDay = saving / workingDays;
-      breakeven = upfrontCost / savingPerDay;
-    } else {
-      breakeven = double.infinity;
-    }
+    // คำนวณ Breakeven โดยใช้ค่า Upfront Cost จาก input และ Working Days = 240
+    const workingDays = 240.0;
+    double savingPerDay = saving / workingDays;
+    double breakeven = double.parse(_upfrontCostController.text) / savingPerDay;
 
     setState(() {
       _processCurrentCostController.text =
@@ -163,7 +156,7 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
         marginDifference: marginDifference,
         currency: _selectedCurrency,
         totalVolume: volumePerYear,
-        workingDays: double.parse(_workingDaysController.text),
+        workingDays: workingDays, // ส่งค่าคงที่ 240 ไปยังหน้า Output
       ),
     );
   }
@@ -388,37 +381,7 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
               ),
               const SizedBox(height: 16),
               // Process Cost Section
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1B365C),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Process cost',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildProcessField(
-                            'Improvement', _improvementController, ''),
-                        _buildProcessField(
-                            'Volume/Year', _volumePerYearController, ''),
-                        _buildDisabledField('Saving', _savingController),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+              _buildProcessCostSection(),
               const SizedBox(height: 24),
               // Buttons
               Row(
@@ -584,5 +547,38 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
 
   double _calculateVCMImpact() {
     return _calculateNewVCM() - _calculatePreviousVCM();
+  }
+
+  Widget _buildProcessCostSection() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B365C),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Process cost',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildProcessField('Upfront Cost', _upfrontCostController, ''),
+              _buildDisabledField('Improvement', _improvementController),
+              _buildProcessField('Volume/Year', _volumePerYearController, ''),
+              _buildDisabledField('Saving', _savingController),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
