@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../pages/business_case_output_page.dart';
+import '../pages/process_analysis_output_page.dart';
 
 class ProcessAnalysisPage extends StatefulWidget {
   const ProcessAnalysisPage({super.key});
@@ -153,19 +154,16 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
       _savingController.text = _formatWithCurrency(saving.toStringAsFixed(2));
     });
 
-    // เปิดหน้า Business Case Output
+    // Show ProcessAnalysisOutputPage dialog
     showDialog(
       context: context,
-      builder: (context) => BusinessCaseOutputPage(
-        previousVCM: _calculatePreviousVCM(),
-        newVCM: _calculateNewVCM(),
-        vcmImpact: _calculateVCMImpact(),
-        upfrontCost: upfrontCost,
+      builder: (context) => ProcessAnalysisOutputPage(
+        upfrontCost: double.parse(_upfrontCostController.text),
         breakeven: breakeven,
         marginDifference: marginDifference,
         currency: _selectedCurrency,
-        unit: 'Piece',
         totalVolume: volumePerYear,
+        workingDays: double.parse(_workingDaysController.text),
       ),
     );
   }
@@ -238,8 +236,8 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
           _buildProcessField('Efficiency', _newEfficiencyController, '%'),
           _buildProcessField(
               'Piece per cycle', _newPiecePerCycleController, 'Piece'),
-          _buildProcessField('Machine rate per\nminute (Cost)',
-              _newMachineRateController, ''),
+          _buildProcessField(
+              'Machine rate per\nminute (Cost)', _newMachineRateController, ''),
           _buildDisabledField(
               'Process cost per piece', _processNewCostController),
         ],
@@ -411,8 +409,10 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildProcessField('Improvement', _improvementController, ''),
-                        _buildProcessField('Volume/Year', _volumePerYearController, ''),
+                        _buildProcessField(
+                            'Improvement', _improvementController, ''),
+                        _buildProcessField(
+                            'Volume/Year', _volumePerYearController, ''),
                         _buildDisabledField('Saving', _savingController),
                       ],
                     ),
@@ -431,14 +431,16 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Please fill all required fields correctly'),
+                            content: Text(
+                                'Please fill all required fields correctly'),
                           ),
                         );
                       }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF1B365C),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
                     ),
                     child: const Text(
                       'Generate Business Case',
@@ -451,7 +453,8 @@ class _ProcessAnalysisPageState extends State<ProcessAnalysisPage> {
                       Navigator.of(context).pop();
                     },
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
                     ),
                     child: const Text(
                       'Cancel',
