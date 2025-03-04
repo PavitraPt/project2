@@ -1,1 +1,55 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"nscproject-319ed","appId":"1:318728633467:android:8302a6a6dff26aef2236de","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"nscproject-319ed","appId":"1:318728633467:ios:0d312110751bc4932236de","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"macos":{"default":{"projectId":"nscproject-319ed","appId":"1:318728633467:ios:0d312110751bc4932236de","uploadDebugSymbols":false,"fileOutput":"macos/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"nscproject-319ed","configurations":{"android":"1:318728633467:android:8302a6a6dff26aef2236de","ios":"1:318728633467:ios:0d312110751bc4932236de","macos":"1:318728633467:ios:0d312110751bc4932236de","web":"1:318728633467:web:9e8f6adef8d3034d2236de","windows":"1:318728633467:web:d8aad4915e0af58b2236de"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "nscproject-319ed",
+          "appId": "1:318728633467:android:8302a6a6dff26aef2236de",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "nscproject-319ed",
+          "appId": "1:318728633467:ios:0d312110751bc4932236de",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "nscproject-319ed",
+          "appId": "1:318728633467:ios:0d312110751bc4932236de",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "nscproject-319ed",
+          "configurations": {
+            "android": "1:318728633467:android:8302a6a6dff26aef2236de",
+            "ios": "1:318728633467:ios:0d312110751bc4932236de",
+            "macos": "1:318728633467:ios:0d312110751bc4932236de",
+            "web": "1:318728633467:web:9e8f6adef8d3034d2236de",
+            "windows": "1:318728633467:web:d8aad4915e0af58b2236de"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

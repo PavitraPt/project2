@@ -7,6 +7,8 @@ import 'material_analysis_page.dart';
 import 'packaging_analysis_page.dart';
 import 'process_analysis_page.dart';
 import 'main_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,9 +21,9 @@ class _HomePageState extends State<HomePage> {
   String? _selectedOption;
   final List<String> _options = ['BOP', 'Material', 'Packaging', 'Process'];
 
-  // เพิ่ม list สำหรับเก็บชื่อโปรเจกต์
-  final List<String> _projectNames = ['Project A', 'Project B', 'Project C'];
-  String? _selectedProject;
+  // ใช้ตัวแปรนี้แทนสำหรับเก็บ ID ของ project ที่เลือก
+  String? _selectedProjectId;
+  final TextEditingController _projectNameController = TextEditingController();
 
   // Mock history data
   final List<Map<String, dynamic>> _historyItems = [
@@ -35,12 +37,36 @@ class _HomePageState extends State<HomePage> {
     },
   ];
 
-  void _handleLogout() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginPage()),
-      (route) => false,
-    );
+  // ฟังก์ชันสำหรับ logout
+  Future<void> _handleLogout(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      if (context.mounted) {
+        // กลับไปหน้า login และล้าง stack
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to logout')),
+      );
+    }
+  }
+
+  // ฟังก์ชันสำหรับดึงข้อมูลผู้ใช้
+  Future<String> _getUserName() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      return doc.data()?['name'] ?? 'User';
+    }
+    return 'User';
   }
 
   void _showAnalysisPage(BuildContext context, String type) {
@@ -120,13 +146,91 @@ class _HomePageState extends State<HomePage> {
   }
 
   // เพิ่มฟังก์ชันสำหรับเพิ่มโปรเจกต์ใหม่
-  void _addNewProject(String newProject) {
-    if (newProject.isNotEmpty && !_projectNames.contains(newProject)) {
-      setState(() {
-        _projectNames.add(newProject);
-        _selectedProject = newProject;
-      });
+  void _addNewProject(String projectName) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final userRef =
+            FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+        // เพิ่ม print เพื่อดู debug
+        print('Creating project: $projectName for user: ${user.uid}');
+
+        await FirebaseFirestore.instance.collection('projects').add({
+          'name': projectName,
+          'createdAt': FieldValue.serverTimestamp(),
+          'createdBy': userRef,
+        });
+
+        // แสดง success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Project "$projectName" created successfully')),
+          );
+        }
+      } else {
+        throw Exception('User not logged in');
+      }
+    } catch (e) {
+      // แสดง error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to create project: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      print('Error creating project: $e');
     }
+  }
+
+  // ดึงข้อมูล Projects ของ User
+  Stream<QuerySnapshot> getUserProjects() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final userRef =
+          FirebaseFirestore.instance.collection('users').doc(user.uid);
+      return FirebaseFirestore.instance
+          .collection('projects')
+          .where('createdBy', isEqualTo: userRef)
+          .orderBy('createdAt', descending: true)
+          .snapshots();
+    }
+    throw Exception('User not logged in');
+  }
+
+  // แสดง Dialog สำหรับสร้าง Project ใหม่
+  void _showCreateProjectDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create New Project'),
+        content: TextField(
+          controller: _projectNameController,
+          decoration: const InputDecoration(
+            labelText: 'Project Name',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (_projectNameController.text.isNotEmpty) {
+                _addNewProject(_projectNameController.text);
+                _projectNameController.clear();
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -165,54 +269,53 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: Autocomplete<String>(
-                            optionsBuilder:
-                                (TextEditingValue textEditingValue) {
-                              if (textEditingValue.text == '') {
-                                return _projectNames;
+                          child: StreamBuilder<QuerySnapshot>(
+                            stream: getUserProjects(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasError) {
+                                return Text('Error: ${snapshot.error}',
+                                    style:
+                                        const TextStyle(color: Colors.white));
                               }
-                              return _projectNames.where((String option) {
-                                return option.toLowerCase().contains(
-                                      textEditingValue.text.toLowerCase(),
-                                    );
-                              });
-                            },
-                            onSelected: (String selection) {
-                              setState(() {
-                                _selectedProject = selection;
-                              });
-                            },
-                            fieldViewBuilder: (
-                              context,
-                              controller,
-                              focusNode,
-                              onFieldSubmitted,
-                            ) {
-                              return TextFormField(
-                                controller: controller,
-                                focusNode: focusNode,
+
+                              // ถ้าไม่มีข้อมูล หรือ ข้อมูลว่างเปล่า
+                              if (!snapshot.hasData ||
+                                  snapshot.data!.docs.isEmpty) {
+                                return const Text(
+                                  'No projects yet',
+                                  style: TextStyle(color: Colors.white70),
+                                );
+                              }
+
+                              return DropdownButton<String>(
+                                value: _selectedProjectId,
+                                hint: const Text('Select Project',
+                                    style: TextStyle(color: Colors.white)),
+                                dropdownColor: const Color(0xFF1B365C),
                                 style: const TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: 'Enter project name',
-                                  hintStyle: TextStyle(
-                                      color: Colors.white.withOpacity(0.7)),
-                                  border: const UnderlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.white),
-                                  ),
-                                  suffixIcon: IconButton(
-                                    icon: const Icon(Icons.add,
-                                        color: Colors.white),
-                                    onPressed: () {
-                                      if (controller.text.isNotEmpty) {
-                                        _addNewProject(controller.text);
-                                        controller.clear();
-                                      }
-                                    },
-                                  ),
+                                underline: Container(
+                                  height: 1,
+                                  color: Colors.white,
                                 ),
+                                isExpanded: true,
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    _selectedProjectId = newValue;
+                                  });
+                                },
+                                items: snapshot.data!.docs.map((doc) {
+                                  return DropdownMenuItem<String>(
+                                    value: doc.id,
+                                    child: Text(doc['name']),
+                                  );
+                                }).toList(),
                               );
                             },
                           ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add, color: Colors.white),
+                          onPressed: () => _showCreateProjectDialog(),
                         ),
                       ],
                     ),
@@ -232,12 +335,17 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      'PAVITRA P.',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    FutureBuilder<String>(
+                      future: _getUserName(),
+                      builder: (context, snapshot) {
+                        return Text(
+                          snapshot.data ?? 'Loading...',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(width: 16),
                     IconButton(
@@ -245,7 +353,7 @@ class _HomePageState extends State<HomePage> {
                         Icons.logout,
                         color: Colors.white,
                       ),
-                      onPressed: _handleLogout,
+                      onPressed: () => _handleLogout(context),
                     ),
                   ],
                 ),

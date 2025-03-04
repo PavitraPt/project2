@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'create_account_page.dart';
 import 'forgot_password_page.dart';
 import 'home_page.dart';
@@ -16,6 +17,13 @@ class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
 
   @override
   void dispose() {
@@ -24,20 +32,43 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  Future<void> _loadSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _rememberMe = prefs.getBool('rememberMe') ?? false;
+      if (_rememberMe) {
+        _usernameController.text = prefs.getString('email') ?? '';
+        _passwordController.text = prefs.getString('password') ?? '';
+      }
+    });
+  }
+
+  Future<void> _saveCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('rememberMe', _rememberMe);
+    if (_rememberMe) {
+      await prefs.setString('email', _usernameController.text);
+      await prefs.setString('password', _passwordController.text);
+    } else {
+      await prefs.remove('email');
+      await prefs.remove('password');
+    }
+  }
+
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
-      
+
       try {
-        // Firebase authentication
         await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _usernameController.text.trim(),
           password: _passwordController.text,
         );
-        
-        // Navigate to home page on successful login
+
+        await _saveCredentials();
+
         if (!mounted) return;
         Navigator.pushAndRemoveUntil(
           context,
@@ -45,9 +76,8 @@ class _LoginPageState extends State<LoginPage> {
           (route) => false,
         );
       } on FirebaseAuthException catch (e) {
-        // Handle specific Firebase Auth errors
         String errorMessage = 'An error occurred during sign in';
-        
+
         if (e.code == 'user-not-found') {
           errorMessage = 'No user found with this email';
         } else if (e.code == 'wrong-password') {
@@ -57,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
         } else if (e.code == 'user-disabled') {
           errorMessage = 'This user account has been disabled';
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
@@ -65,7 +95,6 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
       } catch (e) {
-        // Handle other errors
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
@@ -210,11 +239,16 @@ class _LoginPageState extends State<LoginPage> {
                         Row(
                           children: [
                             Checkbox(
-                              value: false,
-                              onChanged: (value) {},
+                              value: _rememberMe,
+                              onChanged: (value) {
+                                setState(() {
+                                  _rememberMe = value ?? false;
+                                });
+                              },
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(4),
                               ),
+                              activeColor: const Color(0xFF8655FF),
                             ),
                             const Text('Remember me'),
                           ],
@@ -248,7 +282,8 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
+                            ? const CircularProgressIndicator(
+                                color: Colors.white)
                             : const Text(
                                 'Sign In',
                                 style: TextStyle(

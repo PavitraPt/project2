@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CreateAccountPage extends StatefulWidget {
   const CreateAccountPage({super.key});
@@ -13,6 +15,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -23,11 +26,64 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     super.dispose();
   }
 
-  void _handleCreateAccount() {
+  Future<void> _handleCreateAccount() async {
     if (_formKey.currentState!.validate()) {
-      // TODO: Implement account creation logic
-      print('Name: ${_nameController.text}');
-      print('Email: ${_emailController.text}');
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        // 1. Create user account with Firebase Auth
+        final userCredential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+
+        // 2. Create user document in Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set({
+          'name': _nameController.text,
+          'email': _emailController.text,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        // 3. Navigate back to login page with success message
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account created successfully! Please sign in.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } on FirebaseAuthException catch (e) {
+        // Handle specific Firebase Auth errors
+        String errorMessage = 'An error occurred';
+        if (e.code == 'weak-password') {
+          errorMessage = 'The password provided is too weak';
+        } else if (e.code == 'email-already-in-use') {
+          errorMessage = 'An account already exists for that email';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      } catch (e) {
+        // Handle other errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to create account')),
+        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 
@@ -187,21 +243,24 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                       width: double.infinity,
                       height: 48,
                       child: ElevatedButton(
-                        onPressed: _handleCreateAccount,
+                        onPressed: _isLoading ? null : _handleCreateAccount,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF8655FF),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text(
-                          'Create Account',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: _isLoading
+                            ? const CircularProgressIndicator(
+                                color: Colors.white)
+                            : const Text(
+                                'Create Account',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 16),
